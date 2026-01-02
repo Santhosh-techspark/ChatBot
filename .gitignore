@@ -1,20 +1,13 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
-venv/
-env/
+# User uploaded documents
+documents/
+media/
 
 # Django
 db.sqlite3
-media/
 staticfiles/
 
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
