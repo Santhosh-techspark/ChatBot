@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
+
 
 # ==============================
 # 📄 Document Model
@@ -19,20 +21,6 @@ class Document(models.Model):
         return self.file.name
 
 
-class DocumentChunk(models.Model):
-    document = models.ForeignKey(
-        Document,
-        on_delete=models.CASCADE,
-        related_name="chunks"
-    )
-    content = models.TextField()
-    embedding = models.JSONField()  # vector
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Chunk {self.id} of {self.document.file.name}"
-
-
 # ==============================
 # 💬 Conversation Model
 # ==============================
@@ -45,7 +33,7 @@ class Conversation(models.Model):
 
     title = models.CharField(max_length=255, default="New chat")
 
-    # ✅ FIX: Proper FK instead of IntegerField
+    # ✅ Correct: Active document context (FK, not Integer)
     active_document = models.ForeignKey(
         Document,
         on_delete=models.SET_NULL,
@@ -60,9 +48,8 @@ class Conversation(models.Model):
         return self.title
 
 
-
 # ==============================
-# 🗨️ Chat Message Model (FIXED)
+# 🗨️ Chat Message Model
 # ==============================
 class ChatMessage(models.Model):
     MESSAGE_TYPES = (
@@ -81,21 +68,29 @@ class ChatMessage(models.Model):
         related_name="messages"
     )
 
-    # 🔹 Message type (text or document)
     message_type = models.CharField(
         max_length=10,
         choices=MESSAGE_TYPES,
         default="text"
     )
 
-    # 🔹 Normal chat
+    # 🔹 Text chat
     user_message = models.TextField(blank=True)
     bot_reply = models.TextField(blank=True)
 
-    # 🔹 Document upload message
+    # 🔹 Document upload reference
     uploaded_file_name = models.CharField(
         max_length=255,
         blank=True
+    )
+
+    # ✅ CRITICAL: binds chat message → exact document
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="messages"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

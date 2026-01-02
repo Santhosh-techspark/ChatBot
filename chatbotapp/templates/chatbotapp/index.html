@@ -15,7 +15,7 @@
             color: #fff;
         }
 
-        /* ========== SIDEBAR ========== */
+        /* ================= SIDEBAR ================= */
         .sidebar {
             width: 260px;
             background: #202123;
@@ -25,35 +25,53 @@
             overflow-y: auto;
         }
 
-        .sidebar a {
-            color: #fff;
-            text-decoration: none;
+        .new-chat {
+            background: #19c37d;
+            color: #000;
+            font-weight: 600;
+            text-align: center;
             padding: 10px;
             border-radius: 6px;
+            text-decoration: none;
+            margin-bottom: 12px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             margin-bottom: 4px;
+        }
+
+        .chat-link {
+            flex: 1;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px;
+            border-radius: 6px;
             font-size: 14px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .sidebar a:hover {
+        .chat-link:hover {
             background: #2a2b32;
         }
 
-        .sidebar .active {
+        .chat-link.active {
             background: #444654;
         }
 
-        .new-chat {
-            background: #19c37d;
-            color: #000 !important;
-            font-weight: 600;
-            margin-bottom: 12px;
-            text-align: center;
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 14px;
         }
 
-        /* ========== MAIN CHAT ========== */
+        /* ================= MAIN ================= */
         .main {
             flex: 1;
             display: flex;
@@ -81,8 +99,8 @@
             padding: 12px;
             border-radius: 12px;
             margin-bottom: 16px;
-            white-space: pre-wrap;
             line-height: 1.4;
+            white-space: pre-wrap;
         }
 
         .user {
@@ -100,7 +118,7 @@
             font-size: 14px;
         }
 
-        /* ========== INPUT BAR (SINGLE FORM) ========== */
+        /* ================= INPUT BAR ================= */
         .input-area {
             padding: 12px;
             background: #202123;
@@ -125,6 +143,9 @@
             color: #fff;
             font-size: 22px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .upload-btn:hover {
@@ -160,36 +181,42 @@
             color: #ccc;
             margin-left: 6px;
         }
-
-        .upload-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
     </style>
 </head>
 
 <body>
 
-    <!-- ========== SIDEBAR ========== -->
+    <!-- ================= SIDEBAR ================= -->
     <div class="sidebar">
         <a href="{% url 'new_chat' %}" class="new-chat">＋ New chat</a>
 
         {% for conv in conversations %}
-        <a href="{% url 'conversation' conv.id %}" class="{% if conv.id == active_conversation.id %}active{% endif %}">
-            {{ conv.title }}
-        </a>
+        <div class="chat-item">
+            <a href="{% url 'conversation' conv.id %}"
+                class="chat-link {% if conv.id == active_conversation.id %}active{% endif %}">
+                {{ conv.title }}
+            </a>
+
+            <form method="post" action="{% url 'delete_conversation' conv.id %}">
+                {% csrf_token %}
+                <button class="delete-btn" onclick="return confirm('Delete this chat permanently?')">
+                    🗑
+                </button>
+            </form>
+        </div>
         {% endfor %}
     </div>
 
-    <!-- ========== MAIN ========== -->
+    <!-- ================= MAIN ================= -->
     <div class="main">
 
         <div class="header">
             <h3>AI Assistant</h3>
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
-                <button style="background:none;color:#ff7a7a;border:none;">Logout</button>
+                <button style="background:none;color:#ff7a7a;border:none;">
+                    Logout
+                </button>
             </form>
         </div>
 
@@ -202,7 +229,6 @@
                 📄 <strong>Uploaded document:</strong><br>
                 {{ chat.uploaded_file_name }}
             </div>
-
             {% else %}
             {% if chat.user_message %}
             <div class="message user">{{ chat.user_message }}</div>
@@ -215,21 +241,17 @@
             {% endfor %}
         </div>
 
-        <!-- ========== SINGLE INPUT FORM ========== -->
+        <!-- INPUT -->
         <div class="input-area">
             <form method="post" enctype="multipart/form-data" class="chat-bar">
                 {% csrf_token %}
 
-                <!-- Hidden file input -->
                 <input type="file" id="fileInput" name="document" accept=".pdf,.doc,.docx,.txt" hidden>
 
-                <!-- Upload button -->
                 <label for="fileInput" class="upload-btn">+</label>
 
-                <!-- Message input -->
                 <input type="text" name="message" class="chat-input" placeholder="Type a message or upload a document…">
 
-                <!-- Send -->
                 <button type="submit" class="send-btn">Send</button>
             </form>
 
