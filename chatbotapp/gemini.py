@@ -2,10 +2,15 @@ import os
 from groq import Groq
 
 api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    raise RuntimeError("❌ GROQ_API_KEY not found")
+client = None
 
-client = Groq(api_key=api_key)
+def get_client():
+    global client
+    if client is None:
+        if not api_key:
+            raise RuntimeError("GROQ_API_KEY not found. Please set it in your environment variables.")
+        client = Groq(api_key=api_key)
+    return client
 
 MODEL_NAME = "openai/gpt-oss-120b"
 
