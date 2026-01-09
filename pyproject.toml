@@ -7,6 +7,7 @@ dependencies = [
     "django>=5.2.10",
     "groq>=1.0.0",
     "gunicorn>=23.0.0",
+    "dj-database-url",
     "numpy>=2.4.0",
     "psycopg2-binary>=2.9.11",
     "pypdf2>=3.0.1",
