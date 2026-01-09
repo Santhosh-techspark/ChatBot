@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # ==================================================
 # Base directory
@@ -75,7 +76,6 @@ WSGI_APPLICATION = "ChatBot.wsgi.application"
 # ==================================================
 # Database (PostgreSQL) - Replit configuration
 # ==================================================
-import dj_database_url
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
@@ -138,9 +138,12 @@ USE_I18N = True
 USE_TZ = True
 
 # ==================================================
-# Static files
+# Static files (CSS, JavaScript, Images)
 # ==================================================
-STATIC_URL = "static/"
+
+STATIC_URL = "/static/"
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # ==================================================
 # Authentication redirects
