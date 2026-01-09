@@ -12,19 +12,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==================================================
 load_dotenv(BASE_DIR / ".env")
 
-
-
 # ==================================================
 # Django core settings
 # ==================================================
-SECRET_KEY = os.getenv(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-change-this-in-production"
-)
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY",
+                       "django-insecure-change-this-in-production")
 
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
-
+DEBUG = os.getenv("REPLIT_DEPLOYMENT") != "true"
+ALLOWED_HOSTS = [
+    ".replit.app",
+    "chat-bot-santhoshcoder.replit.app",
+]
 
 # ==================================================
 # Installed applications
@@ -39,7 +37,6 @@ INSTALLED_APPS = [
     "chatbotapp.apps.ChatbotappConfig",
 ]
 
-
 # ==================================================
 # Middleware
 # ==================================================
@@ -52,7 +49,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 # ==================================================
 # URLs & Templates
@@ -76,7 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "ChatBot.wsgi.application"
 
-
 # ==================================================
 # Database (PostgreSQL) - Replit configuration
 # ==================================================
@@ -85,16 +80,21 @@ import dj_database_url
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
-        "default": dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+        "default": dj_database_url.config(default=DATABASE_URL,
+                                          conn_max_age=600)
     }
 else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("PGDATABASE", os.getenv("POSTGRES_DB", "chatbotdb")),
-            "USER": os.getenv("PGUSER", os.getenv("POSTGRES_USER", "postgres")),
-            "PASSWORD": os.getenv("PGPASSWORD", os.getenv("POSTGRES_PASSWORD", "")),
-            "HOST": os.getenv("PGHOST", os.getenv("POSTGRES_HOST", "localhost")),
+            "NAME": os.getenv("PGDATABASE",
+                              os.getenv("POSTGRES_DB", "chatbotdb")),
+            "USER": os.getenv("PGUSER", os.getenv("POSTGRES_USER",
+                                                  "postgres")),
+            "PASSWORD": os.getenv("PGPASSWORD",
+                                  os.getenv("POSTGRES_PASSWORD", "")),
+            "HOST": os.getenv("PGHOST", os.getenv("POSTGRES_HOST",
+                                                  "localhost")),
             "PORT": os.getenv("PGPORT", os.getenv("POSTGRES_PORT", "5432")),
         }
     }
@@ -107,17 +107,27 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.repl.co",
 ]
 
-
 # ==================================================
 # Password validation
 # ==================================================
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.MinimumLengthValidator"
+    },
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.CommonPasswordValidator"
+    },
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.NumericPasswordValidator"
+    },
 ]
-
 
 # ==================================================
 # Internationalization
@@ -127,12 +137,10 @@ TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
 
-
 # ==================================================
 # Static files
 # ==================================================
 STATIC_URL = "static/"
-
 
 # ==================================================
 # Authentication redirects
@@ -141,12 +149,10 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
-
 # ==================================================
 # Default primary key field
 # ==================================================
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 
 # ==================================================
 # 🔑 AI API Keys (DO NOT hardcode)
@@ -154,3 +160,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.replit.app",
+]
