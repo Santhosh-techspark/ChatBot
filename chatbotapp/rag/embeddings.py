@@ -1,12 +1,9 @@
 # chatbotapp/rag/embeddings.py
 
-from sentence_transformers import SentenceTransformer
 from typing import List
 
 # ✅ Free, local, industry-standard embedding model
 # 384-dimensional vectors
-_model = SentenceTransformer("all-MiniLM-L6-v2")
-
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
     """

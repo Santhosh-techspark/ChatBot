@@ -8,3 +8,7 @@ channel = "stable-25_05"
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[deployment]
+deploymentTarget = "cloudrun"
+run = ["sh", "-c", "gunicorn ChatBot.wsgi:application --bind 0.0.0.0:$PORT"]
