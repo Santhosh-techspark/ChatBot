@@ -3,11 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from chatbotapp.text_cleaner import clean_llm_output
 
 from chatbotapp.rag.rag_pipeline import ingest_document, retrieve_context
 from .gemini import get_ai_reply
 from .models import ChatMessage, Conversation, Document
 import re
+
 
 def extract_word_limit(message: str):
     """
@@ -29,16 +31,11 @@ def resolve_target_document_id(conversation, user_msg):
     user_msg = user_msg.lower()
 
     # Get document messages IN ORDER
-    document_messages = (
-        ChatMessage.objects
-        .filter(
-            conversation=conversation,
-            message_type="document",
-            document__isnull=False
-        )
-        .select_related("document")
-        .order_by("created_at")
-    )
+    document_messages = (ChatMessage.objects.filter(
+        conversation=conversation,
+        message_type="document",
+        document__isnull=False).select_related("document").order_by(
+            "created_at"))
 
     if not document_messages.exists():
         return conversation.active_document_id
@@ -61,7 +58,9 @@ def resolve_target_document_id(conversation, user_msg):
     # 2️⃣ Filename match
     for doc in documents:
         filename = doc.file.name.lower().split("/")[-1]
-        name_no_ext = filename.replace(".pdf", "").replace(".docx", "").replace("_", " ")
+        name_no_ext = filename.replace(".pdf",
+                                       "").replace(".docx",
+                                                   "").replace("_", " ")
 
         if name_no_ext in user_msg:
             return doc.id
@@ -80,11 +79,9 @@ def resolve_target_document_id(conversation, user_msg):
 @login_required
 @require_POST
 def delete_conversation(request, conversation_id):
-    conversation = get_object_or_404(
-        Conversation,
-        id=conversation_id,
-        user=request.user
-    )
+    conversation = get_object_or_404(Conversation,
+                                     id=conversation_id,
+                                     user=request.user)
     conversation.delete()
     return redirect("home")
 
@@ -100,23 +97,15 @@ def home(request, conversation_id=None):
     # Resolve conversation
     # -------------------------------
     if conversation_id:
-        conversation = get_object_or_404(
-            Conversation,
-            id=conversation_id,
-            user=user
-        )
+        conversation = get_object_or_404(Conversation,
+                                         id=conversation_id,
+                                         user=user)
     else:
-        conversation = (
-            Conversation.objects
-            .filter(user=user)
-            .order_by("-created_at")
-            .first()
-        )
+        conversation = (Conversation.objects.filter(
+            user=user).order_by("-created_at").first())
         if not conversation:
-            conversation = Conversation.objects.create(
-                user=user,
-                title="New chat"
-            )
+            conversation = Conversation.objects.create(user=user,
+                                                       title="New chat")
 
     # ==================================================
     # POST: Upload or Chat
@@ -128,28 +117,21 @@ def home(request, conversation_id=None):
         # -------------------------------
         uploaded_file = request.FILES.get("document")
         if uploaded_file:
-            document = Document.objects.create(
-                user=user,
-                file=uploaded_file
-            )
+            document = Document.objects.create(user=user, file=uploaded_file)
 
             # Set active document
             conversation.active_document_id = document.id
             conversation.save(update_fields=["active_document_id"])
 
-            ingest_document(
-                user=user,
-                uploaded_file=uploaded_file,
-                document_id=document.id
-            )
+            ingest_document(user=user,
+                            uploaded_file=uploaded_file,
+                            document_id=document.id)
 
-            ChatMessage.objects.create(
-                conversation=conversation,
-                user=user,
-                message_type="document",
-                uploaded_file_name=uploaded_file.name,
-                document=document
-            )
+            ChatMessage.objects.create(conversation=conversation,
+                                       user=user,
+                                       message_type="document",
+                                       uploaded_file_name=uploaded_file.name,
+                                       document=document)
 
             return redirect("conversation", conversation_id=conversation.id)
 
@@ -160,12 +142,9 @@ def home(request, conversation_id=None):
 
         if user_msg:
             # Chat history (no document rows)
-            history_qs = (
-                ChatMessage.objects
-                .filter(conversation=conversation)
-                .exclude(message_type="document")
-                .order_by("-created_at")[:8]
-            )
+            history_qs = (ChatMessage.objects.filter(
+                conversation=conversation).exclude(
+                    message_type="document").order_by("-created_at")[:8])
 
             history_text = ""
             for chat in reversed(history_qs):
@@ -174,17 +153,13 @@ def home(request, conversation_id=None):
 
             # 🧠 Resolve document explicitly
             target_document_id = resolve_target_document_id(
-                conversation,
-                user_msg
-            )
+                conversation, user_msg)
 
             document_context = ""
             if target_document_id is not None:
-                chunks = retrieve_context(
-                    question=user_msg,
-                    document_id=target_document_id,
-                    top_k=3
-                )
+                chunks = retrieve_context(question=user_msg,
+                                          document_id=target_document_id,
+                                          top_k=3)
                 if chunks:
                     document_context = "\n\n".join(chunks)
 
@@ -196,24 +171,21 @@ def home(request, conversation_id=None):
                     f"STRICT INSTRUCTION:\n"
                     f"- Write a complete story\n"
                     f"- Use EXACTLY {word_limit} words\n"
-                    f"- Do NOT exceed or fall below the limit\n"
-                )
+                    f"- Do NOT exceed or fall below the limit\n")
             else:
                 enforced_prompt = user_msg
 
-            bot_reply = get_ai_reply(
-                message=enforced_prompt,
-                history_text=history_text,
-                document_text=document_context
-            )
+            raw_reply = get_ai_reply(message=enforced_prompt,
+                                     history_text=history_text,
+                                     document_text=document_context)
 
-            ChatMessage.objects.create(
-                conversation=conversation,
-                user=user,
-                message_type="text",
-                user_message=user_msg,
-                bot_reply=bot_reply
-            )
+            bot_reply = clean_llm_output(raw_reply)
+
+            ChatMessage.objects.create(conversation=conversation,
+                                       user=user,
+                                       message_type="text",
+                                       user_message=user_msg,
+                                       bot_reply=bot_reply)
 
             if conversation.title == "New chat":
                 conversation.title = user_msg[:40]
@@ -224,27 +196,18 @@ def home(request, conversation_id=None):
     # ==================================================
     # Load UI
     # ==================================================
-    conversations = (
-        Conversation.objects
-        .filter(user=user)
-        .order_by("-created_at")
-    )
+    conversations = (Conversation.objects.filter(
+        user=user).order_by("-created_at"))
 
-    chat_history = (
-        ChatMessage.objects
-        .filter(conversation=conversation)
-        .order_by("created_at")
-    )
+    chat_history = (ChatMessage.objects.filter(
+        conversation=conversation).order_by("created_at"))
 
     return render(
-        request,
-        "chatbotapp/index.html",
-        {
+        request, "chatbotapp/index.html", {
             "chat_history": chat_history,
             "conversations": conversations,
             "active_conversation": conversation,
-        }
-    )
+        })
 
 
 # ==================================================
@@ -252,10 +215,8 @@ def home(request, conversation_id=None):
 # ==================================================
 @login_required
 def new_chat(request):
-    conversation = Conversation.objects.create(
-        user=request.user,
-        title="New chat"
-    )
+    conversation = Conversation.objects.create(user=request.user,
+                                               title="New chat")
     return redirect("conversation", conversation_id=conversation.id)
 
 
@@ -272,8 +233,4 @@ def signup(request):
     else:
         form = UserCreationForm()
 
-    return render(
-        request,
-        "registration/signup.html",
-        {"form": form}
-    )
+    return render(request, "registration/signup.html", {"form": form})

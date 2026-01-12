@@ -19,11 +19,8 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY",
                        "django-insecure-change-this-in-production")
 
-DEBUG = os.getenv("REPLIT_DEPLOYMENT") != "true"
-ALLOWED_HOSTS = [
-    ".replit.app",
-    "chat-bot-santhoshcoder.replit.app",
-]
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
 
 # ==================================================
 # Installed applications
@@ -104,8 +101,7 @@ else:
 # CSRF Configuration for Replit proxy
 # ==================================================
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.replit.dev",
-    "https://*.repl.co",
+    "https://*.replit.app",
 ]
 
 # ==================================================
@@ -167,7 +163,3 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ==================================================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://*.replit.app",
-]
