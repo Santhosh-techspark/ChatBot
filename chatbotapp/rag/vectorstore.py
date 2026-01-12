@@ -17,7 +17,7 @@ class SimpleVectorStore:
 GLOBAL_VECTOR_STORE = SimpleVectorStore()
 
 
-def chunk_text(text, chunk_size=400, overlap=50):
+def chunk_text(text, chunk_size=700, overlap=100):
     words = text.split()
     chunks = []
     start = 0

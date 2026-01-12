@@ -60,7 +60,7 @@ Rules:
             "content": prompt
         }],
         temperature=0.4,
-        max_tokens=512,
+        max_tokens=1200,
     )
 
     return response.choices[0].message.content.strip()

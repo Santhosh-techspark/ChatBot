@@ -159,19 +159,33 @@ def home(request, conversation_id=None):
             if target_document_id is not None:
                 chunks = retrieve_context(question=user_msg,
                                           document_id=target_document_id,
-                                          top_k=3)
+                                          top_k=8)
                 if chunks:
                     document_context = "\n\n".join(chunks)
 
             word_limit = extract_word_limit(user_msg)
 
-            if word_limit:
+            word_limit = extract_word_limit(user_msg)
+
+            # 🔥 FORCE CHATGPT-STYLE EXPLANATION
+            if "explain" in user_msg.lower():
+                enforced_prompt = (
+                    "You are an expert AI assistant.\n\n"
+                    "Explain the document in a clear, detailed, and conversational manner.\n"
+                    "- Expand on key ideas\n"
+                    "- Add context and reasoning\n"
+                    "- Use natural paragraphs (no bullet points, no markdown symbols)\n"
+                    "- Write like ChatGPT explaining to a human\n\n"
+                    f"User request: {user_msg}")
+
+            elif word_limit:
                 enforced_prompt = (
                     f"{user_msg}\n\n"
                     f"STRICT INSTRUCTION:\n"
                     f"- Write a complete story\n"
                     f"- Use EXACTLY {word_limit} words\n"
                     f"- Do NOT exceed or fall below the limit\n")
+
             else:
                 enforced_prompt = user_msg
 
