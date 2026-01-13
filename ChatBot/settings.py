@@ -19,7 +19,7 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY",
                        "django-insecure-change-this-in-production")
 
-DEBUG = True
+DEBUG = os.getenv("REPLIT_DEPLOYMENT") != "true"
 ALLOWED_HOSTS = ["*"]
 
 # ==================================================
